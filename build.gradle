@@ -1,0 +1,28 @@
+plugins {
+    id 'java'
+}
+
+group = 'org.klimuz'
+version = '1.0-SNAPSHOT'
+
+repositories {
+    mavenCentral()
+    google()
+    flatDir {
+        dirs 'libs'
+    }
+}
+
+dependencies {
+    implementation files('libs/sqlite-jdbc-3.49.1.0.jar')
+    implementation 'com.google.api-client:google-api-client:1.32.1'
+    implementation 'com.google.oauth-client:google-oauth-client-jetty:1.32.1'
+    implementation group: 'com.google.apis', name: 'google-api-services-drive', version: 'v3-rev20250216-2.0.0'
+    implementation 'org.openjfx:javafx-controls:17'
+    implementation 'org.openjfx:javafx-fxml:17'
+    testImplementation 'junit:junit:4.13.2'
+}
+
+test {
+    useJUnitPlatform()
+}
