@@ -9,22 +9,19 @@ import javafx.scene.control.TableColumn;
 import javafx.scene.control.TableRow;
 import javafx.scene.control.TableView;
 import javafx.scene.control.cell.PropertyValueFactory;
-import javafx.scene.image.Image;
 import javafx.scene.layout.*;
 import javafx.scene.paint.Color;
 import javafx.stage.Stage;
 
-import java.util.Objects;
-
 public class MainApp extends Application {
+    public static TableView<Equipment> tableView;
 
     @Override
     public void start(Stage primaryStage) {
 
-        Image icon = new Image(Objects.requireNonNull(getClass().getResourceAsStream("/images/logo600.png")));
-        primaryStage.getIcons().add(icon);
+        primaryStage.getIcons().add(Globals.icon);
 
-        TableView<Equipment> tableView = new TableView<>();
+        tableView = new TableView<>();
 
         TableColumn<Equipment, String> nameColumn = new TableColumn<>("Имя");
         nameColumn.setCellValueFactory(new PropertyValueFactory<>("name"));
@@ -45,8 +42,6 @@ public class MainApp extends Application {
         tableView.setStyle("-fx-background-color: #76770a;");
         tableView.setItems(Globals.items);
 
-//        tableView.setStyle("-fx-font-size: 20px;");
-
         tableView.setRowFactory(tv -> {
             TableRow<Equipment> row = new TableRow<Equipment>() {
                 @Override
@@ -64,7 +59,7 @@ public class MainApp extends Application {
             row.setOnMouseClicked(event -> {
                 if (!row.isEmpty()) {
                     Globals.position = row.getIndex();
-                    Toast.makeText(primaryStage, String.valueOf(Globals.position), 3000, 500, 500);
+//                    Toast.makeText(primaryStage, String.valueOf(Globals.position), 3000, 500, 500);
                 }
             });
 
@@ -86,11 +81,11 @@ public class MainApp extends Application {
         buttonGrid.add(buttonAdd, 0, 0);
         buttonGrid.add(buttonDelete, 1, 0);
         buttonGrid.add(buttonEdit, 2, 0);
+        buttonGrid.add(buttonJobs, 3, 0);
         buttonGrid.add(buttonIssue, 0, 1);
         buttonGrid.add(buttonReturn, 1, 1);
         buttonGrid.add(buttonSave, 2, 1);
-        buttonGrid.add(buttonJobs, 3, 1);
-        buttonGrid.add(buttonRefresh, 3, 0);
+        buttonGrid.add(buttonRefresh, 3, 1);
         buttonGrid.setHgap(20); // Увеличение горизонтального зазора между кнопками
         buttonGrid.setVgap(20); // Увеличение вертикального зазора между кнопками
         buttonGrid.setAlignment(Pos.CENTER); // Центрирование кнопок в контейнере
@@ -115,12 +110,26 @@ public class MainApp extends Application {
         VBox.setVgrow(buttonContainer, Priority.ALWAYS);
 
         buttonAdd.setOnAction(e -> {
-            AddApp addApp = new AddApp();
-            addApp.openAddWindow(primaryStage);
+            AddEquipment addApp = new AddEquipment();
+            addApp.openAddEquipmentWindow(primaryStage);
         });
 
-        buttonRefresh.setOnAction(e -> {
+        buttonJobs.setOnAction(event -> {
+            JobsWindow jobsWindow = new JobsWindow();
+            jobsWindow.openJobsWindow(primaryStage);
+        });
 
+        buttonIssue.setOnAction(e -> {
+            if (Globals.position < 0){
+                Toast.makeText(primaryStage, "Выбери предмет выдачи!", 3000, 500, 500);
+            } else {
+                if (!Globals.jobs.isEmpty()) {
+                    Issue issue = new Issue();
+                    issue.openIssueWindow(primaryStage);
+                } else {
+                    Toast.makeText(primaryStage, "Создай работу!", 3000, 500, 500);
+                }
+            }
         });
 
         // Создание контейнера для ListView с правым ограничением
@@ -153,12 +162,23 @@ public class MainApp extends Application {
     }
 
     public static void main(String[] args) {
-//        if (Globals.items.isEmpty()) {
-//            Globals.items.add(new Equipment("микрофон", 200));
-//            Globals.items.add(new Equipment("пульт", 10));
-//            Globals.items.add(new Equipment("стойка", 300));
-//            Globals.items.add(new Equipment("кабель", 300));
-//        }
+        if (Globals.items.isEmpty()) {
+            Globals.items.add(new Equipment("микрофон", 200));
+            Globals.items.add(new Equipment("пульт", 10));
+            Globals.items.add(new Equipment("стойка", 300));
+            Globals.items.add(new Equipment("кабель", 300));
+        }
+        if (Globals.jobs.isEmpty()){
+            Globals.jobs.add("театр");
+            Globals.jobs.add("клуб");
+            Globals.jobs.add("панорамка");
+            Globals.jobs.add("дружба");
+            for (Equipment equipment : Globals.items){
+                for (int i = 0; i < Globals.jobs.size(); i++){
+                    equipment.setJobsInfo(0);
+                }
+            }
+        }
         launch(args);
     }
 
