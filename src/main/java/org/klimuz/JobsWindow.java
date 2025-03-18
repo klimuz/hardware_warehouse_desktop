@@ -70,7 +70,11 @@ public class JobsWindow {
                 Toast.makeText(parentStage, String.format("%s уже существует!", newJob), 3000, 500, 500);
             }
             inputField.clear();
+        } else {
+            Toast.makeText(parentStage, "Напиши название!", 2000, 300, 300);
         }
+        DatabaseManager databaseManager = new DatabaseManager();
+        databaseManager.saveDataToDatabase();
     }
 
     private void deleteJob(Stage parentStage) {
@@ -105,13 +109,13 @@ public class JobsWindow {
                         MainApp.tableView.refresh();
                     }
                     Globals.jobs.remove(selectedJobPosition);
-                } else {
-                    System.out.println("Пользователь выбрал 'Нет'");
                 }
             }
         } else {
             Toast.makeText(parentStage, "Выбери работу!", 3000, 500, 500);
         }
+        DatabaseManager databaseManager = new DatabaseManager();
+        databaseManager.saveDataToDatabase();
     }
 }
 

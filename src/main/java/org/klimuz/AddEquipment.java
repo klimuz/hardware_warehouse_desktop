@@ -112,6 +112,8 @@ public class AddEquipment {
         } else {
             Toast.makeText(addEquipmentWindow, "Ошибка: заполни все поля!", 3000, 500, 500);
         }
+        DatabaseManager databaseManager = new DatabaseManager();
+        databaseManager.saveDataToDatabase();
     }
 
     private int getIndexByName(ObservableList<Equipment> itemList, String name) {

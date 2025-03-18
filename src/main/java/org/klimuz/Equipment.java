@@ -78,6 +78,10 @@ public class Equipment {
         jobsInfo.remove(index);
     }
 
+    public void setJobsList(ArrayList<Integer> jobsInfo){
+        this.jobsInfo = jobsInfo;
+    }
+
     @Override
     public boolean equals(Object obj) {
         if (this == obj) return true;

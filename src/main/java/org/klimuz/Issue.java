@@ -13,7 +13,6 @@ import javafx.stage.Modality;
 import javafx.stage.Stage;
 
 public class Issue {
-    private ComboBox<String> jobsList;
     private TextField fieldQuantity;
     private int selectedJobPosition = -1;
     private Equipment equipment;
@@ -25,6 +24,7 @@ public class Issue {
         issueWindow.getIcons().add(Globals.icon);
         issueWindow.initModality(Modality.WINDOW_MODAL);
         issueWindow.initOwner(parentStage);
+
         Label labelItem = new Label(equipment.getName());
         Label labelInStock = new Label(String.valueOf(equipment.getInStock()));
         Label labelInThisJobText = new Label("Уже выдано :");
@@ -102,5 +102,7 @@ public class Issue {
         } else {
             Toast.makeText(parentStage, "Напиши сколько отдать!", 3000, 500, 500);
         }
+        DatabaseManager databaseManager = new DatabaseManager();
+        databaseManager.saveDataToDatabase();
     }
 }

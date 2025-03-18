@@ -4,14 +4,18 @@ import javafx.application.Application;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.Scene;
-import javafx.scene.control.Button;
-import javafx.scene.control.TableColumn;
-import javafx.scene.control.TableRow;
-import javafx.scene.control.TableView;
+import javafx.scene.control.*;
 import javafx.scene.control.cell.PropertyValueFactory;
 import javafx.scene.layout.*;
 import javafx.scene.paint.Color;
 import javafx.stage.Stage;
+import org.klimuz.google.FileChecker;
+import org.klimuz.google.FileDownloader;
+import org.klimuz.google.FileLister;
+import org.klimuz.google.FileUploaderWithOverwrite;
+
+import java.io.IOException;
+import java.util.Optional;
 
 public class MainApp extends Application {
     public static TableView<Equipment> tableView;
@@ -20,6 +24,10 @@ public class MainApp extends Application {
     public void start(Stage primaryStage) {
 
         primaryStage.getIcons().add(Globals.icon);
+
+        Label labelItemName = new Label();
+        labelItemName.setTextFill(Color.WHITE);
+        labelItemName.setStyle("-fx-font-size: 60px;");
 
         tableView = new TableView<>();
 
@@ -41,7 +49,6 @@ public class MainApp extends Application {
         tableView.getColumns().add(inUseColumn);
         tableView.setStyle("-fx-background-color: #76770a;");
         tableView.setItems(Globals.items);
-
         tableView.setRowFactory(tv -> {
             TableRow<Equipment> row = new TableRow<Equipment>() {
                 @Override
@@ -59,7 +66,7 @@ public class MainApp extends Application {
             row.setOnMouseClicked(event -> {
                 if (!row.isEmpty()) {
                     Globals.position = row.getIndex();
-//                    Toast.makeText(primaryStage, String.valueOf(Globals.position), 3000, 500, 500);
+                    labelItemName.setText(Globals.items.get(Globals.position).getName());
                 }
             });
 
@@ -67,13 +74,12 @@ public class MainApp extends Application {
         });
         tableView.setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY);
 
-        // Создание 6 кнопок и расположение их в 2 ряда
         Button buttonAdd = new Button("Добавить");
         Button buttonDelete = new Button("Удалить");
         Button buttonEdit = new Button("Изменить");
         Button buttonIssue = new Button("Выдать");
         Button buttonReturn = new Button("Вернуть");
-        Button buttonSave = new Button("Сохранить");
+        Button buttonXls = new Button("*.xls");
         Button buttonJobs = new Button("Работы");
         Button buttonRefresh = new Button("Обновить");
 
@@ -84,7 +90,7 @@ public class MainApp extends Application {
         buttonGrid.add(buttonJobs, 3, 0);
         buttonGrid.add(buttonIssue, 0, 1);
         buttonGrid.add(buttonReturn, 1, 1);
-        buttonGrid.add(buttonSave, 2, 1);
+        buttonGrid.add(buttonXls, 2, 1);
         buttonGrid.add(buttonRefresh, 3, 1);
         buttonGrid.setHgap(20); // Увеличение горизонтального зазора между кнопками
         buttonGrid.setVgap(20); // Увеличение вертикального зазора между кнопками
@@ -98,14 +104,14 @@ public class MainApp extends Application {
         buttonEdit.setPrefSize(buttonWidth, buttonHeight);
         buttonIssue.setPrefSize(buttonWidth, buttonHeight);
         buttonReturn.setPrefSize(buttonWidth, buttonHeight);
-        buttonSave.setPrefSize(buttonWidth, buttonHeight);
+        buttonXls.setPrefSize(buttonWidth, buttonHeight);
         buttonJobs.setPrefSize(buttonWidth, buttonHeight);
         buttonRefresh.setPrefSize(buttonWidth, buttonHeight);
 
-        // Создание контейнера для кнопок с зазором и увеличенного размера
-        VBox buttonContainer = new VBox(buttonGrid);
+        VBox buttonContainer = new VBox(labelItemName, buttonGrid);
         buttonContainer.setAlignment(Pos.CENTER);
         buttonContainer.setPadding(new Insets(50, 50, 50, 50)); // Установка зазоров
+        VBox.setMargin(labelItemName, new Insets(10, 15, 200, 15));
         buttonContainer.setPrefWidth(800); // Увеличиваем ширину контейнера для кнопок
         VBox.setVgrow(buttonContainer, Priority.ALWAYS);
 
@@ -121,68 +127,129 @@ public class MainApp extends Application {
 
         buttonIssue.setOnAction(e -> {
             if (Globals.position < 0){
-                Toast.makeText(primaryStage, "Выбери предмет выдачи!", 3000, 500, 500);
+                Toast.makeText(primaryStage, "Выбери предмет выдачи!", 2000, 300, 300);
             } else {
                 if (!Globals.jobs.isEmpty()) {
                     Issue issue = new Issue();
                     issue.openIssueWindow(primaryStage);
                 } else {
-                    Toast.makeText(primaryStage, "Создай работу!", 3000, 500, 500);
+                    Toast.makeText(primaryStage, "Создай работу!", 2000, 300, 300);
                 }
             }
         });
 
-        // Создание контейнера для ListView с правым ограничением
+        buttonReturn.setOnAction(event -> {
+            if (Globals.position < 0){
+                Toast.makeText(primaryStage, "Выбери оборудование!", 2000, 300, 300);
+            } else {
+                if (Globals.items.get(Globals.position).getInUse() > 0) {
+                    Return returnWindow = new Return();
+                    returnWindow.openReturnWindow(primaryStage);
+                } else {
+                    Toast.makeText(primaryStage, "Нечего возвращать!", 2000, 300, 300);
+                }
+            }
+        });
+
+        buttonEdit.setOnAction(event -> {
+            if (Globals.position < 0){
+                Toast.makeText(primaryStage, "Выбери оборудование!", 2000, 300, 300);
+            } else {
+                EditEquipment editEquipment = new EditEquipment();
+                editEquipment.startEditWindow(primaryStage);
+            }
+        });
+
+        buttonDelete.setOnAction(event -> {
+            if (Globals.position < 0){
+                Toast.makeText(primaryStage, "Выбери, что удалить!", 2000, 300, 300);
+            } else {
+                Alert alert = new Alert(Alert.AlertType.CONFIRMATION);
+                alert.setTitle("Подтверждение");
+                alert.setHeaderText("Внимание!");
+                alert.setContentText("Действительно удалить?");
+                ButtonType buttonTypeYes = new ButtonType("Да");
+                ButtonType buttonTypeNo = new ButtonType("Нет");
+                alert.getButtonTypes().setAll(buttonTypeYes, buttonTypeNo);
+
+                Stage alertStage = (Stage) alert.getDialogPane().getScene().getWindow();
+                alertStage.getIcons().add(Globals.icon);
+
+                Optional<ButtonType> result = alert.showAndWait();
+                if (result.isPresent() && result.get() == buttonTypeYes) {
+
+                    Globals.items.remove(Globals.position);
+                    DatabaseManager databaseManager = new DatabaseManager();
+                    databaseManager.saveDataToDatabase();
+                    MainApp.tableView.refresh();
+
+                } else {
+                    System.out.println("Пользователь выбрал 'Нет'");
+                }
+            }
+        });
+
+        buttonXls.setOnAction(event -> {
+            XlsWindow xlsWindow = new XlsWindow();
+            xlsWindow.openXlsWindow(primaryStage);
+        });
+
+        buttonRefresh.setOnAction(event -> {
+            try {
+                FileLister.listAllFiles();
+            } catch (IOException e) {
+                throw new RuntimeException(e);
+            }
+
+        });
+
+
+
         VBox listViewContainer = new VBox(tableView);
         listViewContainer.setPrefWidth(200);
-//        listViewContainer.setMaxWidth(Region.USE_COMPUTED_SIZE);
         VBox.setVgrow(tableView, Priority.ALWAYS);
 
-        // Создание горизонтального контейнера для ListView и кнопок
         HBox contentContainer = new HBox(listViewContainer, buttonContainer);
         HBox.setHgrow(listViewContainer, Priority.ALWAYS);
         HBox.setHgrow(buttonContainer, Priority.ALWAYS);
         contentContainer.setSpacing(50); // Установка зазора между ListView и кнопками
 
-
-        // Создание основного контейнера и установка коричневого фона
         VBox mainContainer = new VBox(contentContainer);
         mainContainer.setBackground(new Background(new BackgroundFill(Color.web("#282828"), CornerRadii.EMPTY, Insets.EMPTY)));
         VBox.setVgrow(contentContainer, Priority.ALWAYS);
 
-        // Создание сцены
         Scene scene = new Scene(mainContainer, 800, 600);
         primaryStage.setScene(scene);
 
-        // Настройка основного окна приложения
         primaryStage.setTitle("Склад оборудования");
         primaryStage.setScene(scene);
         primaryStage.setMaximized(true); // Растягиваем окно на весь экран
+
+        primaryStage.setOnCloseRequest(event -> {
+            try {
+                java.io.File file = new java.io.File("inventory.db");
+                FileUploaderWithOverwrite.uploadOrReplaceFile(file);
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        });
         primaryStage.show();
     }
 
     public static void main(String[] args) {
-        if (Globals.items.isEmpty()) {
-            Globals.items.add(new Equipment("микрофон", 200));
-            Globals.items.add(new Equipment("пульт", 10));
-            Globals.items.add(new Equipment("стойка", 300));
-            Globals.items.add(new Equipment("кабель", 300));
+        try {
+            String fileId = FileChecker.findFileByName("inventory.db");
+            FileDownloader.downloadFile(fileId, "inventory.db");
+        } catch (IOException e) {
+            e.printStackTrace();
         }
-        if (Globals.jobs.isEmpty()){
-            Globals.jobs.add("театр");
-            Globals.jobs.add("клуб");
-            Globals.jobs.add("панорамка");
-            Globals.jobs.add("дружба");
-            for (Equipment equipment : Globals.items){
-                for (int i = 0; i < Globals.jobs.size(); i++){
-                    equipment.setJobsInfo(0);
-                }
-            }
-        }
-        launch(args);
-    }
+        DatabaseManager databaseManager = new DatabaseManager();
+        databaseManager.loadDataFromDatabase();
 
+            launch(args);
+    }
 }
+
 
 
 
