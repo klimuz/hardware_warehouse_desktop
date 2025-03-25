@@ -1,5 +1,10 @@
 package org.klimuz;
 
+import org.klimuz.google.DownloadDB;
+import org.klimuz.google.UploadDB;
+import org.klimuz.google.InitializeAPI;
+
+import com.google.api.services.drive.Drive;
 import javafx.application.Application;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
@@ -9,16 +14,17 @@ import javafx.scene.control.cell.PropertyValueFactory;
 import javafx.scene.layout.*;
 import javafx.scene.paint.Color;
 import javafx.stage.Stage;
-import org.klimuz.google.FileChecker;
-import org.klimuz.google.FileDownloader;
-import org.klimuz.google.FileLister;
-import org.klimuz.google.FileUploaderWithOverwrite;
+
+
+
+
 
 import java.io.IOException;
 import java.util.Optional;
 
 public class MainApp extends Application {
     public static TableView<Equipment> tableView;
+    private Boolean isOnline = true;
 
     @Override
     public void start(Stage primaryStage) {
@@ -81,7 +87,7 @@ public class MainApp extends Application {
         Button buttonReturn = new Button("Вернуть");
         Button buttonXls = new Button("*.xls");
         Button buttonJobs = new Button("Работы");
-        Button buttonRefresh = new Button("Обновить");
+        Button buttonInternet = new Button("Интернет");
 
         GridPane buttonGrid = new GridPane();
         buttonGrid.add(buttonAdd, 0, 0);
@@ -91,7 +97,7 @@ public class MainApp extends Application {
         buttonGrid.add(buttonIssue, 0, 1);
         buttonGrid.add(buttonReturn, 1, 1);
         buttonGrid.add(buttonXls, 2, 1);
-        buttonGrid.add(buttonRefresh, 3, 1);
+        buttonGrid.add(buttonInternet, 3, 1);
         buttonGrid.setHgap(20); // Увеличение горизонтального зазора между кнопками
         buttonGrid.setVgap(20); // Увеличение вертикального зазора между кнопками
         buttonGrid.setAlignment(Pos.CENTER); // Центрирование кнопок в контейнере
@@ -106,7 +112,7 @@ public class MainApp extends Application {
         buttonReturn.setPrefSize(buttonWidth, buttonHeight);
         buttonXls.setPrefSize(buttonWidth, buttonHeight);
         buttonJobs.setPrefSize(buttonWidth, buttonHeight);
-        buttonRefresh.setPrefSize(buttonWidth, buttonHeight);
+        buttonInternet.setPrefSize(buttonWidth, buttonHeight);
 
         VBox buttonContainer = new VBox(labelItemName, buttonGrid);
         buttonContainer.setAlignment(Pos.CENTER);
@@ -194,13 +200,9 @@ public class MainApp extends Application {
             xlsWindow.openXlsWindow(primaryStage);
         });
 
-        buttonRefresh.setOnAction(event -> {
-            try {
-                FileLister.listAllFiles();
-            } catch (IOException e) {
-                throw new RuntimeException(e);
-            }
-
+        buttonInternet.setOnAction(event -> {
+            Internet internet = new Internet();
+            internet.openInternetWindow(primaryStage);
         });
 
 
@@ -226,27 +228,39 @@ public class MainApp extends Application {
         primaryStage.setMaximized(true); // Растягиваем окно на весь экран
 
         primaryStage.setOnCloseRequest(event -> {
-            try {
-                java.io.File file = new java.io.File("inventory.db");
-                FileUploaderWithOverwrite.uploadOrReplaceFile(file);
-            } catch (IOException e) {
-                e.printStackTrace();
-            }
+//            try {
+//                java.io.File file = new java.io.File("inventory.db");
+//                FileUploaderWithOverwrite.uploadOrReplaceFile(file);
+//            } catch (IOException e) {
+//                e.printStackTrace();
+//            }
         });
+
         primaryStage.show();
+
+        if (!Globals.isInternetAvailable()){
+            InternetWarning internetWarning = new InternetWarning();
+            internetWarning.openInternetWarningWindow(primaryStage);
+        }
     }
 
     public static void main(String[] args) {
-        try {
-            String fileId = FileChecker.findFileByName("inventory.db");
-            FileDownloader.downloadFile(fileId, "inventory.db");
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-        DatabaseManager databaseManager = new DatabaseManager();
-        databaseManager.loadDataFromDatabase();
-
+        if (Globals.isInternetAvailable()) {
+//            try {
+//                String fileId = FileChecker.findFileByName("inventory.db");
+//                FileDownloader.downloadFile(fileId, "inventory.db");
+//            } catch (IOException e) {
+//                e.printStackTrace();
+//            }
+//            DownloadDB.downloadDatabase();
+            DatabaseManager databaseManager = new DatabaseManager();
+            databaseManager.loadDataFromDatabase();
             launch(args);
+        } else {
+            DatabaseManager databaseManager = new DatabaseManager();
+            databaseManager.loadDataFromDatabase();
+            launch(args);
+        }
     }
 }
 

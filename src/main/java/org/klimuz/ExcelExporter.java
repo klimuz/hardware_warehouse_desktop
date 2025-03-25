@@ -77,7 +77,6 @@ public class ExcelExporter {
             int rowIndex = 1;
             for (Equipment equipment : Globals.items) {
                 if (equipment.getJobsInfo(jobIndex) > 0) {
-
                     Row row = sheet.createRow(rowIndex);
                     Cell nameCell = row.createCell(0);
                     nameCell.setCellValue(equipment.getName()); // "Инструмент"

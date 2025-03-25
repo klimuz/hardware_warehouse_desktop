@@ -85,7 +85,7 @@ public class Issue {
                 int quantityInt = Integer.parseInt(quantityString);
                 if (quantityInt <= equipment.getInStock()){
                     if (selectedJobPosition < 0){
-                        Toast.makeText(parentStage, "Выбери работу!", 3000, 500, 500);
+                        Toast.makeText(parentStage, "Выбери работу!", 2000, 300, 300);
                     } else {
                         equipment.updateJobsInfo(selectedJobPosition, quantityInt);
                         Globals.items.set(Globals.position, equipment);
@@ -94,13 +94,13 @@ public class Issue {
                 } else {
                     int inStock = equipment.getInStock();
                     String alertString = String.format("Ошибка : Невозможно отдать больше чем %d", inStock);
-                    Toast.makeText(parentStage, alertString, 3000, 500, 500);
+                    Toast.makeText(parentStage, alertString, 2000, 300, 300);
                 }
             } catch (NumberFormatException e){
-                Toast.makeText(parentStage, "Ошибка : количество пиши цифрами!", 3000, 500, 500);
+                Toast.makeText(parentStage, "Ошибка : количество пиши цифрами!", 2000, 300, 300);
             }
         } else {
-            Toast.makeText(parentStage, "Напиши сколько отдать!", 3000, 500, 500);
+            Toast.makeText(parentStage, "Напиши сколько отдать!", 2000, 300, 300);
         }
         DatabaseManager databaseManager = new DatabaseManager();
         databaseManager.saveDataToDatabase();
